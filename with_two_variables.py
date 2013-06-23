@@ -1,28 +1,35 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
-import math
-import time
 from scipy import integrate, misc
 import numpy as np
 from numpy import linalg
 from matplotlib import pyplot, cm
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.backends.backend_pdf import PdfPages
 
-def f(x, y):  # !!!
+
+def prawa(x, y):
     """prawa strona równania"""
-    return x*y
+    return g[0]*x + g[1]*y + g[2]*x*y + g[3]*x*x + g[4]*y*y
+
+
+def lewa(x, y):
+    return h[0]*x + h[1]*y + h[2]*x*y + h[3]*x*x + h[4]*y*y
 
 
 def fi(nr, x, y, x1, x2, x3, y1, y2, y3):
     """funkcja kształtu - równanie płaszczyzny przechodzącej przez trzy punkty,
     gdzie punktowi nr przyporządkowuje się wartość 1, pozostałym 0"""
     if nr == 1:
-        return ((x-x2)*(y3-y2)-(y-y2)*(x3-x2)) / ((x1-x2)*(y3-y2)-(y1-y2)*(x3-x2))
+        nominator = (x-x2) * (y3-y2) - (y-y2) * (x3-x2)
+        denominator = (x1-x2) * (y3-y2) - (y1-y2) * (x3-x2)
     elif nr == 2:
-        return ((x-x1)*(y3-y1)-(y-y1)*(x3-x1)) / ((x2-x1)*(y3-y1)-(y2-y1)*(x3-x1))
-    return ((x-x1)*(y2-y1)-(y-y1)*(x2-x1)) / ((x3-x1)*(y2-y1)-(y3-y1)*(x2-x1))
+        nominator = (x-x1) * (y3-y1) - (y-y1) * (x3-x1)
+        denominator = (x2-x1) * (y3-y1) - (y2-y1) * (x3-x1)
+    else:
+        nominator = (x-x1) * (y2-y1) - (y-y1) * (x2-x1)
+        denominator = (x3-x1) * (y2-y1) - (y3-y1) * (x2-x1)
+    return nominator / denominator
 
 
 def straight_line(y, x1, x2, y1, y2):
@@ -40,38 +47,44 @@ def help_local(inner_function, xp, xq, xr, yp, yq, yr):
 
     def lower(y):
         return xmin
+
     return integrate.dblquad(inner_function, ymin, ymin+ddy, lower, upper)[0]
 
 
 def local_right(xp, xq, xr, yp, yq, yr):
     """element wektoru prawych stron"""
     def inner_function(x, y):
-        return f(x, y)*fi(1, x, y, xp, xq, xr, yp, yq, yr)
+        return prawa(x, y)*fi(1, x, y, xp, xq, xr, yp, yq, yr)
+
     return help_local(inner_function, xp, xq, xr, yp, yq, yr)
 
 
 def local_main(nr, xp, xq, xr, yp, yq, yr):
     """macierz lokalna"""
-    def pox(nr, x, y, x1, x2, x3, y1, y2, y3):
+    def pox(nr, x, y):
         """pochodna funkcji kształtu po x"""
         if nr == 1:
-            return (y3-y2) / ((x1-x2)*(y3-y2) - (y1-y2)*(x3-x2))
+            return (yr-yq) / ((xp-xq)*(yr-yq) - (yp-yq)*(xr-xq))
         elif nr == 2:
-            return (y3-y1) / ((x2-x1)*(y3-y1) - (y2-y1)*(x3-x1))
-        return (y2-y1) / ((x3-x1)*(y2-y1) - (y3-y1)*(x2-x1))
+            return (yr-yp) / ((xq-xp)*(yr-yp) - (yq-yp)*(xr-xp))
+        return (yq-yp) / ((xr-xp)*(yq-yp) - (yr-yp)*(xq-xp))
 
-    def poy(nr, x, y, x1, x2, x3, y1, y2, y3):
+    def poy(nr, x, y):
         """pochodna funkcji kształtu po y"""
         if nr == 1:
-            return -(x3-x2) / ((x1-x2)*(y3-y2) - (y1-y2)*(x3-x2))
+            return -(xr-xq) / ((xp-xq)*(yr-yq) - (yp-yq)*(xr-xq))
         elif nr == 2:
-            return -(x3-x1) / ((x2-x1)*(y3-y1) - (y2-y1)*(x3-x1))
-        return -(x2-x1) / ((x3-x1)*(y2-y1) - (y3-y1)*(x2-x1))
+            return -(xr-xp) / ((xq-xp)*(yr-yp) - (yq-yp)*(xr-xp))
+        return -(xq-xp) / ((xr-xp)*(yq-yp) - (yr-yp)*(xq-xp))
 
     def inner_function(x, y):
-        result = -pox(1, x, y, xp, xq, xr, yp, yq, yr)*pox(nr, x, y, xp, xq, xr, yp, yq, yr)
-        result -= poy(1, x, y, xp, xq, xr, yp, yq, yr)*poy(nr, x, y, xp, xq, xr, yp, yq, yr)
-        result -= 3*x*y*fi(1, x, y, xp, xq, xr, yp, yq, yr)*fi(nr, x, y, xp, xq, xr, yp, yq, yr)
+        result = - a[0]*pox(1, x, y)*pox(nr, x, y)
+        result -= a[1]*pox(1, x, y)*poy(nr, x, y)
+        result -= a[2]*poy(1, x, y)*poy(nr, x, y)
+        result -= a[3]*poy(1, x, y)*pox(nr, x, y)
+        rest = a[4] * pox(nr, x, y) + a[5] * poy(nr, x, y)
+        rest += a[6] * lewa(x, y) * fi(nr, x, y, xp, xq, xr, yp, yq, yr)
+        result += rest*fi(1, x, y, xp, xq, xr, yp, yq, yr)
         return result
     return help_local(inner_function, xp, xq, xr, yp, yq, yr)
 
@@ -114,24 +127,34 @@ def agregate(wezel, siatka):
             main_matrix[i][k] += local_main(3, xp, xq, xr, yp, yq, yr)
     # uwzgędnienie warunków brzegowych
     for ii in range(nodes_number):
-        if wezel[ii][0] == 0 or wezel[ii][1] == 0 or wezel[ii][1] == 1:
-            for i in range(nodes_number):
-                main_matrix[ii][i] = 0
-            main_matrix[ii][ii] = 1
-            right_matrix[ii] = 0
+        if wezel[ii][0] == xa and xaa != 'N':
+            right_matrix[ii] = xaa
+        elif wezel[ii][0] == xb and xbb != 'N':
+            right_matrix[ii] = xbb
+        elif wezel[ii][1] == ya and yaa != 'N':
+            right_matrix[ii] = yaa
+        elif wezel[ii][1] == yb and ybb != 'N':
+            right_matrix[ii] = ybb
+        else:
+            continue
+        for i in range(nodes_number):
+            main_matrix[ii][i] = 0
+        main_matrix[ii][ii] = 1
     return (main_matrix, right_matrix)
 
 
 def shape_line(x, y, xc, yc):
     """funkcja przybliżająca rozwiązanie w otoczeniu węzła (xc, yc)"""
-    if xc+ddx >= x >= xc and yc+ddy >= y >= yc and ddx*(y-yc) + ddy*(x-xc) <= ddy*ddx:
+    if xc+ddx >= x >= xc and yc+ddy >= y >= yc and \
+            ddx*(y-yc) + ddy*(x-xc) <= ddy*ddx:
         return fi(1, x, y, xc, xc+ddx, xc, yc, yc, yc+ddy)
     if xc+ddx >= x >= xc and yc-ddy <= y <= yc:
         if ddx*(y+ddy-yc) + ddy*(x-xc) > ddy*ddx:
             return fi(1, x, y, xc, xc+ddx, xc+ddx, yc, yc, yc-ddy)
         else:
             return fi(1, x, y, xc, xc+ddx, xc, yc, yc-ddy, yc-ddy)
-    if xc-ddx <= x <= xc and yc-ddy <= y <= yc and ddx*(y+ddy-yc) + ddy*(x+ddx-xc) >= ddy*ddx:
+    if xc-ddx <= x <= xc and yc-ddy <= y <= yc and \
+            ddx*(y+ddy-yc) + ddy*(x+ddx-xc) >= ddy*ddx:
         return fi(1, x, y, xc, xc-ddx, xc, yc, yc, yc-ddx)
     if xc-ddx <= x <= xc and yc+ddy >= y >= yc:
         if ddx*(y-yc) + ddy*(x+ddx-xc) > ddy*ddx:
@@ -149,22 +172,50 @@ def approximate(x, y, nodes, wsp):
     return result
 
 
-def plot(X, Y, Z, nnx, nny):
+def plot(X, Y, Z, z_min=0):
     """przedstawienie wyniku na wykresie"""
     fig = pyplot.figure()
     ax = fig.gca(projection='3d')
     surf = ax.plot_surface(X, Y, Z)
-    cset = ax.contourf(X, Y, Z, zdir='z', offset=-0.08, cmap=cm.coolwarm)
+    cset = ax.contourf(X, Y, Z, zdir='z', offset=z_min, cmap=cm.coolwarm)
     pyplot.show()
 
 
+def get_val(xy, ab):
+    print """podaj warunek brzegowy Dirichleta dla {xy} = {xy}{ab}
+            (podaj wartość funkcji) lub napisz N, jeśli to warunek Neumana
+            (UWAGA: pochodna musi być tam równa 0)""".format(xy=xy, ab=ab)
+    val = raw_input()
+    try:
+        val = int(val)
+    except ValueError:
+        if val != 'N':
+            raise ValueError('''invalid literal - it should be 'N' or a number: '{}' provided'''.format(val))
+    return val
+
+
 if __name__ == "__main__":
-    xa = 0
-    xb = 2
-    ya = 0
-    yb = 1
-    nnx = 20
-    nny = 20
+    print "podaj granice poszukiwanego obszaru pierwszej zmiennej - 'xa xb'"
+    xa, xb = [int(i) for i in raw_input().split()]
+    print "podaj granice poszukiwanego obszaru dla drugiej zmiennej - 'ya yb'"
+    ya, yb = [int(i) for i in raw_input().split()]
+    print "podaj współczynniki równania - 'a1 a2 a3 a4 a5 a6 a7', gdzie\
+            równanie wyraża się wzorem a1*d^2f(x,y)/dx^2 + a2*d^f(x,y)/dxdy + \
+            a3*d^f(x,y)/dy^2 + a4*d^f(x,y)/dydx + a5*df(x,y)/dx + a6*df(x,y)/dy+\
+            a7f(x,y) + g(x) = h(x)"
+    a = [int(i) for i in raw_input().split()]
+    print "podaj współczynniki funkcji g(x) - 'a b c d e', gdzie\
+            g(x) = ax+by+cxy+dx^2+ey^2"
+    g = [int(i) for i in raw_input().split()]
+    print "podaj współczynniki funkcji h(x) - 'a b c d e', gdzie\
+            h(x) = ax+by+cxy+dx^2+ey^2"
+    h = [int(i) for i in raw_input().split()]
+    xaa = get_val('x', 'a')
+    xbb = get_val('x', 'b')
+    yaa = get_val('y', 'a')
+    ybb = get_val('y', 'b')
+    print "podaj jak bardzo dokładny ma być wynik (1-10)"
+    nnx = nny = 10*int(raw_input())
     ddx = float(xb - xa)/float(nnx - 1)
     ddy = float(yb - ya)/float(nny - 1)
     nodes_number = nnx*nny
@@ -179,4 +230,5 @@ if __name__ == "__main__":
     Z = np.array([approximate(x, y, wezel, wsp)
         for x, y in zip(np.ravel(X), np.ravel(Y))])
     Z = Z.reshape(X.shape)
-    plot(X, Y, Z, nnx, nny)
+    z_min = min(wsp)
+    plot(X, Y, Z, z_min)
