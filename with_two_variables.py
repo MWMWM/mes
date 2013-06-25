@@ -30,12 +30,12 @@ class DifferentialEquation(object):
     def __init__(self, values):
         self.nnx = int(values['nnx']) * 10
         self.nny = int(values['nny']) * 10
-        self.xa, self.xb = [int(x) for x in values['x'].split()]
-        self.ya, self.yb = [int(y) for y in values['y'].split()]
-        self.a = [int(aa) for aa in values['a'].split()]
-        self.g = [int(gg) for gg in values['g'].split()]
-        self.h = [int(hh) for hh in values['h'].split()]
-        boundary = values['boundary'].split()
+        self.xa, self.xb = [int(x) for x in values['x']]
+        self.ya, self.yb = [int(y) for y in values['y']]
+        self.a = [int(aa) for aa in values['a']]
+        self.g = [int(gg) for gg in values['g']]
+        self.h = [int(hh) for hh in values['h']]
+        boundary = values['boundary']
         self.xaa = self.check_validity(boundary[0])
         self.xbb = self.check_validity(boundary[1])
         self.yaa = self.check_validity(boundary[2])
@@ -229,14 +229,14 @@ def get_values_from_command_line():
     print "podaj współczynniki równania - 'a1 a2 a3 a4 a5 a6 a7', gdzie\
             równanie wyraża się wzorem a1*d^2f(x,y)/dx^2 + a2*d^f(x,y)/dxdy + \
             a3*d^f(x,y)/dy^2 + a4*d^f(x,y)/dydx + a5*df(x,y)/dx + a6*df(x,y)/dy+\
-            a7f(x,y) + g(x) = h(x)"
-    a = raw_input()
+            a7*f(x,y)*g(x) = h(x)"
+    a = raw_input().split()
     print "podaj współczynniki funkcji g(x) - 'a b c d e', gdzie\
             g(x) = ax+by+cxy+dx^2+ey^2"
-    g = raw_input()
+    g = raw_input().split()
     print "podaj współczynniki funkcji h(x) - 'a b c d e', gdzie\
             h(x) = ax+by+cxy+dx^2+ey^2"
-    h = raw_input()
+    h = raw_input().split()
     xaa = get_val('x', 'a')
     xbb = get_val('x', 'b')
     yaa = get_val('y', 'a')
@@ -244,7 +244,7 @@ def get_values_from_command_line():
     print "podaj jak bardzo dokładny ma być wynik (1-10)"
     nnx = nny = raw_input()
     return {'x': x, 'y': y, 'a': a, 'g': g, 'h': h, 'nnx': nnx, 'nny': nny,
-            'boundary': xaa + ' ' + xbb + ' ' + yaa + ' ' + ybb}
+            'boundary': [xaa, xbb, yaa, ybb]}
 
 if __name__ == "__main__":
     val = get_values_from_command_line()
