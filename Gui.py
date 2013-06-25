@@ -1,9 +1,11 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
+
 import sys
 from PyQt4 import QtGui
 from with_two_variables import DifferentialEquation
+
 
 def Pack(data):
     data = data.split()
@@ -40,7 +42,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def PutDataFromFile(self):
         dialog_window = QtGui.QFileDialog()
-        fname = dialog_window.getOpenFileName(self, directory='/home/m/Documents/studyjne/mes')
+        fname = dialog_window.getOpenFileName(self, directory='/home/')
         with open(fname, 'r') as f:
             data = f.read().split()
         self.widgets.PasteData(data)
@@ -48,11 +50,10 @@ class MainWindow(QtGui.QMainWindow):
 
     def GetAnswer(self):
         data = self.widgets.CopyData()
-        self.statusBar().showMessage('processing data...', 1000)
         data = Pack(data)
         diff = DifferentialEquation(data)
         diff.solve_equation()
-        self.statusBar().clearMessage()
+
 
 class MyWindow(QtGui.QWidget):
     def __init__(self):
@@ -95,12 +96,18 @@ class MyWindow(QtGui.QWidget):
             self.grid.addWidget(label, line_nb, column_nb)
 
     def AddEquationLine(self, line_nb):
-        a1 = self.AddLabelAndEditLine(u'\u2202 ^2 f(x,y) / \u2202 x^2 + ', line_nb, 0)
-        a2 = self.AddLabelAndEditLine(u'\u2202 ^2 f(x,y) / \u2202 x \u2202 y + ', line_nb, 2)
-        a3 = self.AddLabelAndEditLine(u'\u2202 ^2 f(x,y) / \u2202 y^2 + ', line_nb, 4)
-        a4 = self.AddLabelAndEditLine(u'\u2202 ^2 f(x,y) / \u2202 y \u2202 x + ', line_nb, 6)
-        a5 = self.AddLabelAndEditLine(u'\u2202 f(x,y) / \u2202 x + ', line_nb, 8)
-        a6 = self.AddLabelAndEditLine(u'\u2202 f(x,y) / \u2202 y + ', line_nb, 10)
+        a1 = self.AddLabelAndEditLine(
+                u'\u2202 ^2 f(x,y) / \u2202 x^2 + ', line_nb, 0)
+        a2 = self.AddLabelAndEditLine(
+                u'\u2202 ^2 f(x,y) / \u2202 x \u2202 y + ', line_nb, 2)
+        a3 = self.AddLabelAndEditLine(
+                u'\u2202 ^2 f(x,y) / \u2202 y^2 + ', line_nb, 4)
+        a4 = self.AddLabelAndEditLine(
+                u'\u2202 ^2 f(x,y) / \u2202 y \u2202 x + ', line_nb, 6)
+        a5 = self.AddLabelAndEditLine(
+                u'\u2202 f(x,y) / \u2202 x + ', line_nb, 8)
+        a6 = self.AddLabelAndEditLine(
+                u'\u2202 f(x,y) / \u2202 y + ', line_nb, 10)
         a7 = self.AddLabelAndEditLine(u' f(x,y) *g(x) ', line_nb, 12)
         a8 = self.AddLabel(u' = h(x),', line_nb, 14)
         return [a1, a2, a3, a4, a5, a6]

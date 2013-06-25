@@ -1,6 +1,7 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
+
 from scipy import integrate, misc
 import numpy as np
 from numpy import linalg
@@ -25,6 +26,7 @@ def straight_line(y, x1, x2, y1, y2):
     """zwraca prostą przechodzącą przez dwa określone pukty
     o współrzędnych (x1, y1) i (x2, y2)"""
     return x1 + (y-y1)*(x2-x1)/(y2-y1)
+
 
 class DifferentialEquation(object):
     def __init__(self, values):
@@ -223,9 +225,9 @@ def get_val(xy, ab):
 
 def get_values_from_command_line():
     print "podaj granice poszukiwanego obszaru pierwszej zmiennej - 'xa xb'"
-    x = raw_input()
+    x = raw_input().split()
     print "podaj granice poszukiwanego obszaru dla drugiej zmiennej - 'ya yb'"
-    y = raw_input()
+    y = raw_input().split()
     print "podaj współczynniki równania - 'a1 a2 a3 a4 a5 a6 a7', gdzie\
             równanie wyraża się wzorem a1*d^2f(x,y)/dx^2 + a2*d^f(x,y)/dxdy + \
             a3*d^f(x,y)/dy^2 + a4*d^f(x,y)/dydx + a5*df(x,y)/dx + a6*df(x,y)/dy+\
@@ -245,6 +247,7 @@ def get_values_from_command_line():
     nnx = nny = raw_input()
     return {'x': x, 'y': y, 'a': a, 'g': g, 'h': h, 'nnx': nnx, 'nny': nny,
             'boundary': [xaa, xbb, yaa, ybb]}
+
 
 if __name__ == "__main__":
     val = get_values_from_command_line()
