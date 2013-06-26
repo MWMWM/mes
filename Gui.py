@@ -26,17 +26,23 @@ class MainWindow(QtGui.QMainWindow):
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
 
-        openFile = QtGui.QAction('Open', self)
-        openFile.setShortcut('Ctrl+O')
-        openFile.triggered.connect(self.PutDataFromFile)
-        fileMenu.addAction(openFile)
-        self.widgets.open_button.clicked.connect(self.PutDataFromFile)
+        importFile = QtGui.QAction('Import data', self)
+        importFile.setShortcut('Ctrl+O')
+        importFile.triggered.connect(self.PutDataFromFile)
+        fileMenu.addAction(importFile)
+        self.widgets.import_button.clicked.connect(self.PutDataFromFile)
 
         getResult = QtGui.QAction('Execute', self)
         getResult.setShortcut('Ctrl+E')
         getResult.triggered.connect(self.GetAnswer)
         fileMenu.addAction(getResult)
         self.widgets.answer_button.clicked.connect(self.GetAnswer)
+        
+        exportFile = QtGui.QAction('Export data', self)
+        exportFile.setShortcut('Ctrl+S')
+        exportFile.triggered.connect(self.SendDataToFile)
+        fileMenu.addAction(exportFile)
+        self.widgets.export_button.clicked.connect(self.SendDataToFile)
 
         self.show()
 
@@ -54,6 +60,13 @@ class MainWindow(QtGui.QMainWindow):
         diff = DifferentialEquation(data)
         diff.solve_equation()
 
+    def SendDataToFile(self):
+        data = self.widgets.CopyData()
+        text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 
+            'Give the name of file:')
+        if ok:
+            with open(text, 'w') as f:
+                f.write(data)
 
 class MyWindow(QtGui.QWidget):
     def __init__(self):
@@ -77,7 +90,8 @@ class MyWindow(QtGui.QWidget):
         self.AddLabel(u'Podaj jak dokładne ma być rozwiązanie', 9, 0, 5)
         self.AddLabelAndEditLine('- liczba w granicach [1-10]', 10)
         self.answer_button = self.AddAnswerButton()
-        self.open_button = self.AddOpenButton()
+        self.import_button = self.AddImportButton()
+        self.export_button = self.AddExportButton()
         self.setLayout(self.grid)
         self.setGeometry(300, 300, 350, 300)
 
@@ -121,7 +135,7 @@ class MyWindow(QtGui.QWidget):
         a5 = self.AddLabelAndEditLine(u'y^2', line_nb, 10)
         return [a1, a2, a3, a4, a5]
 
-    def AddOpenButton(self):
+    def AddImportButton(self):
         b = QtGui.QPushButton(u'Wczytaj dane', self)
         b.setToolTip('Click to read data from .txt file')
         self.grid.addWidget(b, 11, 0, 1, 3)
@@ -131,6 +145,11 @@ class MyWindow(QtGui.QWidget):
         b = QtGui.QPushButton(u'Narysuj rozwiązanie', self)
         b.setToolTip('Click to get the answer')
         self.grid.addWidget(b, 11, 4, 1, 3)
+        return b
+    
+    def AddExportButton(self):
+        b = QtGui.QPushButton(u'Exportuj dane do pliku', self)
+        self.grid.addWidget(b, 11, 8, 1, 3)
         return b
 
     def PasteData(self, data):
